@@ -1,35 +1,50 @@
-import _$ from 'jquery';
-import React from 'react';
-import ReactDOM from 'react-dom';
-import TestUtils from 'react-addons-test-utils';
 import jsdom from 'jsdom';
+import jquery from 'jquery';
+import TestUtils from 'react-addons-test-utils';
+import ReactDOM from 'react-dom';
 import chai, { expect } from 'chai';
-import chaiJquery from 'chai-jquery';
+import React from 'react';
 import { Provider } from 'react-redux';
 import { createStore } from 'redux';
 import reducers from '../src/reducers';
+import chaiJquery from 'chai-jquery';
 
+
+// Set up testing environment to run like a browser in the command line
+// create simulated html inside the comandline using fake DOM
 global.document = jsdom.jsdom('<!doctype html><html><body></body></html>');
 global.window = global.document.defaultView;
-const $ = _$(window);
+// assign jquery to local fake DOM rather than the real DOM
+const $ = jquery(global.window);
 
-chaiJquery(chai, chai.util, $);
-
-function renderComponent(ComponentClass, props = {}, state = {}) {
-  const componentInstance =  TestUtils.renderIntoDocument(
+// build 'renderComponent' helper that should render a given react class
+// ComponentClass is refer to the compoent class we build
+function renderComponent(ComponentClass, props, state){
+  // making a instance of the class through 'componentInstance'
+  const componentInstance = TestUtils.renderIntoDocument(
     <Provider store={createStore(reducers, state)}>
-      <ComponentClass {...props} />
+      <ComponentClass {...props}/>
     </Provider>
   );
 
-  return $(ReactDOM.findDOMNode(componentInstance));
+  // produces HTML by passing the 'componentInstance' through ReactDOM
+  // wrap with jquery element for methods within jquery
+  return $(ReactDOM.findDOMNode(componentInstance))
 }
 
-$.fn.simulate = function(eventName, value) {
+// Build helper for simulating events
+// create jquery function simulate - then the function will be available
+$.fn.simulate = function(eventName, value){
+  // update the value of the event
   if (value) {
     this.val(value);
   }
+  // 'this' refer to the selected html element $('<div>')
+  // pass in the change event and invoke the function with this
   TestUtils.Simulate[eventName](this[0]);
-};
+}
 
-export {renderComponent, expect};
+// Set up chai-jquery
+chaiJquery(chai, chai.util, $);
+
+export { renderComponent, expect };
